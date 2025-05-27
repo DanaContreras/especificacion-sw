@@ -1015,6 +1015,11 @@ paths:
               schema:
                 type: number
                 description: Monto máximo
+            - name: idContenido
+              in: query
+              schema:
+                type: string
+                description: Id de contenido
           responses:
             '200':
               description: Lista de compras
