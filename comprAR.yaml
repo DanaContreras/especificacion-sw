@@ -1,0 +1,2782 @@
+openapi: 3.0.0
+info:
+  title: Compr.AR
+  description: API Wrapper para ComprAR
+  version: 0.0.1
+servers:
+  - url: compr.ar
+    description: ''
+  - url: http://localhost:3000
+    description: localhost
+tags:
+  - name: Usuarios
+    description: Se encarga de la gestion de los usuarios
+  - name: Contenidos
+    description: Se encarga de la gestion de los contenidos
+  - name: Suscripciones
+    description: Se encarga de la gestion de las Suscripciones
+  - name: Compras
+    description: Se encarga de crear, cancelar, confirmar las compras y, a su vez, ver estado, modificar estado y cancelar pagos.
+  - name: Consumos
+    description: Se encarga de llevar registro de los consumos de contenidos de un usuario.
+  - name: Cambios
+    description: Se encarga de registrar los cambios que se realizan en contenidos y suscripciones
+paths:
+    /auth/login:
+      post:
+        tags:
+          - Usuarios
+        summary: Iniciar sesión de usuario
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - usuario
+                  - contrasena
+                properties:
+                  usuario:
+                    type: string
+                    example: juan123
+                  contrasena:
+                    type: string
+                    format: password
+                    example: "miSecreta123"
+        responses:
+          '200':
+            description: Inicio de sesión exitoso
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    token:
+                      type: string
+                      example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+          '401':
+            description: Credenciales inválidas
+          '500':
+            description: Error interno del servidor
+    
+    /auth/logout:
+      post:
+        tags:
+          - Usuarios
+        summary: Cerrar sesión del usuario
+        responses:
+          '200': 
+            description: Sesión cerrada exitosamente
+          '401':
+            description: No autorizado
+          '500':
+            description: Error interno del servidor
+    
+    /admin:
+      post:
+        tags:
+          - Usuarios
+        summary: Crear un nuevo usuario administrador
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioAdministrador'
+              example:
+                nombreUsuario: "adminnuevo"
+                email: "admin@compr.ar"
+                contrasena: "password123"
+                rol: "superadmin"
+        responses:
+          '200':
+            description: Usuario administrador creado exitosamente
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/UsuarioAdministrador'
+          '400':
+            description: Error en los datos enviados
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+          '409':
+            description: Conflicto (usuario ya existe)
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+          '500':
+            description: Error interno del servidor
+    
+    /admin/{id}:
+      put:
+        tags:
+          - Usuarios
+        summary: Modificar usuario administrador existente
+        parameters:
+          - name: id
+            in: path
+            required: true
+            description: El ID del usuario
+            schema:
+              type: string
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioAdministrador'
+              example:
+                nombreUsuario: "adminactualizado"
+                email: "nuevo.admin@compr.ar"
+                rol: "editor"
+        responses:
+          '200':
+            description: Usuario administrador modificado exitosamente
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/UsuarioAdministrador'
+          '400':
+            description: Solicitud mal formada
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+          '404':
+            description: Usuario no encontrado
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/NotFoundResponse'
+          '500':
+            description: Error interno del servidor
+      get:
+        tags:
+          - Usuarios
+        summary: Obtener información del usuario administrador
+        parameters:
+          - name: id
+            in: path
+            required: true
+            description: El ID del usuario
+            schema:
+              type: string
+        responses:
+          '200':
+            description: Usuario encontrado
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/UsuarioAdministrador'
+          '404':
+            description: Usuario no encontrado
+          '500':
+            description: Error interno del servidor
+            
+    /cliente:
+      post:
+        tags:
+          - Usuarios
+        summary: Crear un nuevo usuario cliente
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - usuario
+                  - persona
+                properties:
+                  usuario:
+                    $ref: '#/components/schemas/UsuarioCliente'
+                  persona:
+                    $ref: '#/components/schemas/Persona'
+              example:
+                usuario:
+                  nombreUsuario: "cliente123"
+                  email: "cliente@ejemplo.com"
+                  contrasena: "cliente123"
+                  telefono: "+5491122334455"
+                persona:
+                  nombre: "Carlos"
+                  apellido: "Pérez"
+                  dni: "34111222"
+                  telefono: "+5491122334455"
+        responses:
+          '201':
+            description: Usuario cliente creado exitosamente
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    usuario:
+                      $ref: '#/components/schemas/UsuarioCliente'
+                    persona:
+                      $ref: '#/components/schemas/Persona'
+          '400':
+            description: Error en los datos enviados
+          '409':
+            description: Usuario ya existe
+          '500':
+            description: Error interno del servidor
+    
+    /cliente/{id}:
+      put:
+        tags:
+          - Usuarios
+        summary: Modificar usuario cliente
+        parameters:
+          - name: id
+            in: path
+            required: true
+            description: El ID del usuario
+            schema:
+              type: string
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioCliente'
+              example:
+                id: "usr_12345"
+                nombreUsuario: "juanperez_updated"
+                email: "juan.perez@newemail.com"
+                telefono: "+549876543210"
+        responses:
+          '200':
+            description: Usuario cliente modificado exitosamente
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/UsuarioCliente'
+          '400':
+            description: Solicitud inválida
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string
+                    message:
+                      type: string
+                  example:
+                    error: "bad-request"
+                    message: "Invalid JSON format or missing required fields"
+          '404':
+            description: Usuario no encontrado
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string
+                    message:
+                      type: string
+                  example:
+                    error: "not-found"
+                    message: "User with the specified ID does not exist"
+          '500':
+            description: Error interno del servidor
+      get:
+        tags:
+          - Usuarios
+        summary: Obtener información del usuario cliente
+        parameters:
+          - name: id
+            in: path
+            required: true
+            description: El ID del usuario
+            schema:
+              type: string
+        responses:
+          '200':
+            description: Usuario cliente encontrado
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/UsuarioCliente'
+          '404':
+            description: Usuario no encontrado
+          '500':
+            description: Error interno del servidor
+    
+    /usuario/suspender/{id}:
+      put:
+        tags:
+          - Usuarios
+        summary: Suspender un usuario
+        parameters:
+          - name: id
+            in: path
+            required: true
+            description: El ID del usuario
+            schema:
+              type: string
+        responses:
+          '200':
+            description: Usuario suspendido correctamente
+          '404':
+            description: Usuario no encontrado
+          '500':
+            description: Error interno del servidor
+    
+    /usuario/{id}:
+      get:
+        tags:
+          - Usuarios
+        summary: Obtener información general del usuario
+        parameters:
+          - name: id
+            in: path
+            required: true
+            description: El ID del usuario
+            schema:
+              type: string
+        responses:
+          '200':
+            description: Usuario encontrado
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Usuario'
+          '404':
+            description: Usuario no encontrado
+          '500':
+            description: Error interno del servidor
+    
+    /persona/{nombreUsuario}:
+      get:
+        tags:
+          - Usuarios
+        summary: Obtener información de la persona asociada al usuario
+        parameters:
+          - name: nombreUsuario
+            in: path
+            required: true
+            description: El ID del usuario
+            schema:
+              type: string
+        responses:
+          '200':
+            description: Persona encontrada
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Persona'
+          '404':
+            description: Persona no encontrada
+          '500':
+            description: Error interno del servidor
+    
+    /usuarios:
+      get:
+        tags:
+          - Usuarios
+        summary: Obtener todos los usuarios
+        responses:
+          '200':
+            description: Lista de todos los usuarios
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Usuario'
+          '500':
+            description: Error interno del servidor
+    
+    /estado/{id}:
+      post:
+        tags:
+          - Usuarios
+        summary: Agregar una actualización de estado al usuario
+        parameters:
+          - name: id
+            in: path
+            required: true
+            schema:
+              type: string
+            description: ID del usuario
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActualizacionEstado'
+        responses:
+          '200':
+            description: Actualización de estado registrada
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Usuario'
+          '400':
+            description: Solicitud inválida
+          '404':
+            description: Usuario no encontrado
+          '500':
+            description: Error interno del servidor
+
+
+  
+    #  ===============================  Suscripciones  ===============================
+    /suscripcion:
+      post:
+        tags:
+          - Suscripciones
+        description: Crea una nueva de suscripcion
+        requestBody:
+          description: Crea una nueva de suscripcion
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Suscripcion'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Suscripcion'
+            application/x-www-form-urlencoded:
+              schema:
+                $ref: '#/components/schemas/Suscripcion'
+          required: true
+        responses:
+          '200':
+            description: ok
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Suscripcion'
+          '400':
+            description: Creacion no realizada
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+
+      get:
+        tags:
+          - Suscripciones
+        description: Bruh
+        parameters:
+          - in: query
+            name: fechaInicio
+            schema:
+              type: string
+            description: fecha limite inferior, usada para filtrar planes
+          - in: query
+            name: fechaFin
+            schema:
+              type: string
+            description: fecha limite superior, usada para filtrar planes
+        responses:
+          '200':
+            description: ok
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Suscripcion'
+          '204':
+            description: Suscripciones no encontrados
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/NotFoundResponse'
+          '400':
+            description: Suscripciones no encontrados
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+          '503':
+            description: No tiene permisos suficientes
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ForbiddenResponse'
+    /planSuscripcion:
+      post:
+        tags:
+          - Suscripciones
+        description: Crea una nuevo plan de suscripcion
+        requestBody:
+          description: Crea una nuevo plan de suscripcion
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanSuscripcion'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/PlanSuscripcion'
+            application/x-www-form-urlencoded:
+              schema:
+                $ref: '#/components/schemas/PlanSuscripcion'
+          required: true
+        responses:
+          '200':
+            description: ok
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/PlanSuscripcion'
+          '400':
+            description: Creacion no realizada
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+
+      get:
+        tags:
+          - Suscripciones
+        description: Obtiene planes de suscripcion por filtrado o todos los planes
+        parameters:
+          - in: query
+            name: estado
+            schema:
+              type: string
+              enum:
+                - INACTIVA
+                - PUBLICADA
+                - REVISION
+                - RECHAZADA
+            description: Filtrado por estado
+          - in: query
+            name: fecha
+            schema:
+              type: string
+              format: date
+            description: Filtrado por fecha
+        responses:
+          '200':
+            description: ok
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/PlanSuscripcion'
+          '400':
+            description: No se encontro nada
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+          '503':
+            description: No tiene permisos
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ForbiddenResponse'
+    /suscripcion/{id}:
+      put:
+        parameters:
+          - in: path
+            name: id
+            schema:
+              type: string
+            description: El id del usuario cuya suscripcion se agrega
+            required: true
+            example: "usr_12345"
+        tags:
+          - Suscripciones
+        description: Modifica una suscripcion
+        requestBody:
+          description: Modifica una suscripcion
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Suscripcion'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Suscripcion'
+            application/x-www-form-urlencoded:
+              schema:
+                $ref: '#/components/schemas/Suscripcion'
+          required: true
+        responses:
+          '200':
+            description: ok
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Suscripcion'
+          '400':
+            description: Modificacion no realizada
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+          '503':
+            description: No tiene permisos
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ForbiddenResponse'
+    /planSuscripcion/{nombre}:
+      put:
+        tags:
+          - Suscripciones
+        parameters:
+          - in: path
+            name: nombre
+            schema:
+              type: string
+            description: El nombre del plan a modificar
+            required: true
+            example: "silver"
+        requestBody:
+          description: Modifica un plan de suscripcion
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanSuscripcion'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/PlanSuscripcion'
+            application/x-www-form-urlencoded:
+              schema:
+                $ref: '#/components/schemas/PlanSuscripcion'
+          required: true
+        description: Bruh
+        responses:
+          '200':
+            description: ok
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/PlanSuscripcion'
+          '400':
+            description: Modificacion no realizada
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+          '503':
+            description: No tiene permisos
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ForbiddenResponse'
+    /planSuscripcion/deshabilitar/{nombre}:
+      put:
+        tags:
+          - Suscripciones
+        description: Desabilita un plan de suscripcion con un cierto nombre
+        parameters:
+          - in: path
+            name: nombre
+            schema:
+              type: string
+            description: El nombre del plan a deshabilitar
+            required: true
+            example: "silver"
+        responses:
+          '200':
+            description: ok
+          '400':
+            description: Deshabilitacion no realizada
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+          '503':
+            description: No tiene permisos
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ForbiddenResponse'
+    /suscripcion/baja/{id}:
+      put:
+        tags:
+          - Suscripciones
+        description: Da de baja la suscripcion de un usuario
+        parameters:
+          - in: path
+            name: id
+            schema:
+              type: string
+            description: El id del usuario cuya suscripcion se dara de baja
+            required: true
+            example: "usr_12345"
+        requestBody:
+          description: Suscripcion a dar de baja
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Suscripcion'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Suscripcion'
+            application/x-www-form-urlencoded:
+              schema:
+                $ref: '#/components/schemas/Suscripcion'
+          required: true
+        responses:
+          '200':
+            description: ok
+          '400':
+            description: Baja no realizada
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+          '503':
+            description: No tiene permisos
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ForbiddenResponse'
+    /planSuscripcion/revision/{nombre}:
+      post:
+        tags:
+          - Suscripciones
+        description: Carga una revision de un plan de suscripcion
+        parameters:
+          - in: path
+            name: nombre
+            schema:
+              type: string
+            description: Nombre del plan de suscripcion a revisar
+            required: true
+            example: "usr_12345"
+        requestBody:
+          description: Revision a cargar
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Revision'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Revision'
+            application/x-www-form-urlencoded:
+              schema:
+                $ref: '#/components/schemas/Revision'
+        responses:
+          '200':
+            description: ok
+          '400':
+            description: Revision no cargada
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+          '503':
+            description: No tiene permisos
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ForbiddenResponse'
+    /planSuscripcion/publicacion/{nombre}:
+      post:
+        tags:
+          - Suscripciones
+        description: Modifica el estado de un plan de suscripcion para publicarlo
+        parameters:
+          - in: path
+            name: nombre
+            schema:
+              type: string
+            description: Nombre del plan de suscripcion a publicar
+            required: true
+            example: "usr_12345"
+        requestBody:
+          description: El estado de un plan de suscripcion actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EstadoPlanSuscripcion'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/EstadoPlanSuscripcion'
+            application/x-www-form-urlencoded:
+              schema:
+                $ref: '#/components/schemas/EstadoPlanSuscripcion'
+        responses:
+          '200':
+            description: ok
+          '400':
+            description: Publicacion no realizada
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+          '503':
+            description: No tiene permisos
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ForbiddenResponse'
+    /suscripion/{id}:
+      get:
+        tags:
+          - Suscripciones
+        parameters:
+          - in: path
+            name: id
+            schema:
+              type: string
+            description: El id del usuario cuya suscripcion se busca
+            required: true
+            example: "usr_12345"
+        description: Obtiene la suscripcion actual de un usuario por id
+        responses:
+          '200':
+            description: OK
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Suscripcion'
+          '204':
+            description: Suscripcion no encontrada
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/NotFoundResponse'
+          '503':
+            description: No tiene permisos
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ForbiddenResponse'
+
+    /planesSuscripcion/nombres:
+      get:
+        tags:
+          - Suscripciones
+        description: Obtiene los nombres de las suscripciones publicadas
+        responses:
+          '200':
+            description: ok
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/StringList'
+          '204':
+            description: nombres no encontrados
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/NotFoundResponse'
+          '503':
+            description: No tiene permisos
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ForbiddenResponse'
+  
+  
+     #  ===============================  Compras  ===============================
+    /compras/{nroCompra}:
+      get:
+        tags:
+          - Compras
+        summary: Obtener compra por su id nroCompra.
+        description: Retorna la compra cuyo id es nroCompra.
+        operationId: getCompra
+        parameters:
+          - name: nroCompra
+            in: path
+            required: true
+            schema:
+              type: string
+          - name: nombreUsuario
+            in: query
+            schema:
+              type: string
+            description: Nombre de usuario
+        responses:
+          '200':
+            description: Compra encontrada exitosamente
+            content:
+              application/json:
+                schema:
+                  oneOf:
+                    - $ref: '#/components/schemas/CompraContenido'
+                    - $ref: '#/components/schemas/CompraSuscripcion'
+                  discriminator:
+                    propertyName: tipo
+                    mapping:
+                      contenido: '#/components/schemas/CompraContenido'
+                      suscripcion: '#/components/schemas/CompraSuscripcion'
+          '400':
+            description: Solicitud malformada
+          '404':
+            description: Compra no encontrada
+          default:
+            description: Unexpected error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+    /compras:
+      get:
+        tags:
+          - Compras
+        summary: Obtener compras con filtros opcionales
+        parameters:
+          - name: nombreUsuario
+            in: query
+            schema:
+              type: string
+            description: Nombre de usuario
+          - name: tipo
+            in: query
+            schema:
+              type: string
+              enum: [SUSCRIPCION, CONTENIDO]
+            description: Tipo de compra
+          - name: fechaDesde
+            in: query
+            schema:
+              type: string
+              format: date
+            description: Fecha desde
+          - name: fechaHasta
+            in: query
+            schema:
+              type: string
+              format: date
+            description: Fecha hasta
+          - name: montoMinimo
+            in: query
+            schema:
+              type: number
+            description: Monto mínimo
+          - name: montoMaximo
+            in: query
+            schema:
+              type: number
+              description: Monto máximo
+        responses:
+          '200':
+            description: Lista de compras
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    oneOf:
+                    - $ref: '#/components/schemas/CompraContenido'
+                    - $ref: '#/components/schemas/CompraSuscripcion'
+                  discriminator:
+                    propertyName: tipo
+                    mapping:
+                      contenido: '#/components/schemas/CompraContenido'
+                      suscripcion: '#/components/schemas/CompraSuscripcion'
+          default:
+            description: Unexpected error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+    
+    /compras/contenido:
+      get:
+          tags:
+            - Compras
+          summary: Obtener compras de contenido con filtros opcionales
+          parameters:
+            - name: nombreUsuario
+              in: query
+              schema:
+                type: string
+              description: Nombre de usuario
+            - name: fechaDesde
+              in: query
+              schema:
+                type: string
+                format: date
+              description: Fecha desde
+            - name: fechaHasta
+              in: query
+              schema:
+                type: string
+                format: date
+              description: Fecha hasta
+            - name: montoMinimo
+              in: query
+              schema:
+                type: number
+              description: Monto mínimo
+            - name: montoMaximo
+              in: query
+              schema:
+                type: number
+                description: Monto máximo
+          responses:
+            '200':
+              description: Lista de compras
+              content:
+                application/json:
+                  schema:
+                    type: array
+                    items:
+                      - $ref: '#/components/schemas/CompraContenido'
+            default:
+              description: Unexpected error
+              content:
+                application/json:
+                  schema:
+                    $ref: '#/components/schemas/Error'
+      
+      post:
+        tags:
+          - Compras
+        summary: Registra una compra de contenido para un usuario
+        description: Crea una nueva compra de contenido asociada a un usuario.
+        operationId: crearCompraContenido
+        parameters:
+          - name: token
+            in: header
+            required: true
+            description: Token para validar la operación
+            schema:
+              type: string
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  nombreUsuario:
+                    type: string
+                    description: Nombre del usuario que realiza la compra.
+                  idContenido:
+                    type: string
+                    description: Identificador del contenido que se desea comprar.
+                required:
+                  - nombreUsuario
+                  - idContenido
+        responses:
+          '201':
+            description: Compra de contenido registrada exitosamente
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/CompraContenido'
+          '404':
+            description: Usuario no encontrado
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+          '422':
+            description: Error de validación
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+
+    /compras/suscripcion:
+      get:
+        tags:
+          - Compras
+        summary: Obtener compras de suscripciones con filtros opcionales
+        parameters:
+          - name: nombreUsuario
+            in: query
+            schema:
+              type: string
+            description: Nombre de usuario
+          - name: fechaDesde
+            in: query
+            schema:
+              type: string
+              format: date
+            description: Fecha desde
+          - name: fechaHasta
+            in: query
+            schema:
+              type: string
+              format: date
+            description: Fecha hasta
+          - name: montoMinimo
+            in: query
+            schema:
+              type: number
+            description: Monto mínimo
+          - name: montoMaximo
+            in: query
+            schema:
+              type: number
+              description: Monto máximo
+        responses:
+          '200':
+            description: Lista de compras
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/CompraSuscripcion'
+          default:
+            description: Unexpected error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+    
+      post:
+        tags:
+          - Compras
+        summary: Registra una compra de suscripción para un usuario
+        description: Crea una nueva compra de suscripción asociada a un usuario.
+        operationId: crearCompraSuscripcion
+        parameters:
+          - name: token
+            in: header
+            required: true
+            description: Token para validar la operación
+            schema:
+              type: string
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  nombreUsuario:
+                    type: string
+                    description: Nombre del usuario que realiza la compra
+                  nombrePlanSuscripcion:
+                    type: string
+                    description: Nombre del plan de suscripción
+                  fechaInicio:
+                    type: string
+                    format: date
+                    description: Fecha de inicio de la suscripción (formato YYYY-MM-DD)
+                  fechaFin:
+                    type: string
+                    format: date
+                    description: Fecha de finalización de la suscripción (formato YYYY-MM-DD)
+                required:
+                  - nombreUsuario
+                  - nombrePlanSuscripcion
+                  - fechaInicio
+                  - fechaFin
+        responses:
+          '201':
+            description: Compra de suscripción registrada exitosamente
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/CompraSuscripcion'
+          '404':
+            description: Usuario no encontrado
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+          '422':
+            description: Error de validación
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+                  
+    /compras/factura/{nroFactura}:
+      get:
+        tags:
+          - Compras
+        summary: Obtener factura por su id nroFactura.
+        parameters:
+          - name: nroFactura
+            in: path
+            required: true
+            schema:
+              type: string
+        responses:
+          '200':
+            description: Factura encontrada exitosamente
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Factura'
+              application/xml:
+                schema:
+                  $ref: '#/components/schemas/Factura'
+          '400':
+            description: Solicitud malformada
+          '404':
+            description: Factura no encontrada
+          default:
+            description: Unexpected error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+    
+    /pagos/{nroComprobante}:
+      get:
+        tags:
+          - Compras
+        summary: Obtener pago por medio del numero de comprobante.
+        description: Obtener los detalles del pago basado en nroComprobante.
+        operationId: getPago
+        parameters:
+          - name: nroComprobante
+            in: path
+            required: true
+            schema:
+              type: string
+        responses:
+          '200':
+            description: Pago encontrado exitosamente
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Pago'
+              application/xml:
+                schema:
+                  $ref: '#/components/schemas/Pago'
+          '400':
+            description: Solicitud malformada
+          '404':
+            description: Pago no encontrado
+          default:
+            description: Unexpected error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+    /pagos:
+      get:
+        tags:
+          - Compras
+        summary: Obtener pagos con filtros opcionales.
+        description: Retorna una lista de pagos, con la posibilidad de aplicar filtros por estado, tipo y fecha.
+        operationId: getPagos
+        parameters:
+          - name: estado
+            in: query
+            required: false
+            description: Estado del pago (ACEPTADO, CANCELADO, PENDIENTE)
+            schema:
+              type: string
+              enum: [ACEPTADO, CANCELADO, PENDIENTE]
+          - name: tipo
+            in: query
+            required: false
+            description: Tipo de pago (SUSCRIPCION o CONTENIDO)
+            schema:
+              type: string
+              enum: [SUSCRIPCION, CONTENIDO]
+          - name: fechaDesde
+            in: query
+            required: false
+            description: Fecha inicial del filtro (formato YYYY-MM-DD)
+            schema:
+              type: string
+              format: date
+          - name: fechaHasta
+            in: query
+            required: false
+            description: Fecha final del filtro (formato YYYY-MM-DD)
+            schema:
+              type: string
+              format: date
+        responses:
+          '200':
+            description: Lista de pagos obtenida exitosamente
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Pago'
+          '400':
+            description: Parámetros inválidos
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+          default:
+            description: Error inesperado
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+    
+    /pagos/{nroComprobante}/estado:
+      post:
+        tags:
+          - Compras
+        summary: Agrega una nueva actualización de estado al pago identificado por su número de comprobante
+        description: Crea una nueva entrada de estado para el pago especificado, registrando el nuevo estado y la fecha actual.
+        operationId: agregarActualizacionEstadoPago
+        parameters:
+          - name: nroComprobante
+            in: path
+            required: true
+            schema:
+              type: string
+            description: Número de comprobante del pago
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  estadoPago:
+                    type: string
+                    enum: [PENDIENTE, ACEPTADO, RECHAZADO]
+                    description: Nuevo estado que se desea asignar al pago
+                required:
+                  - estadoPago
+        responses:
+          '200':
+            description: Estado actualizado con éxito
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ApiResponse'
+          '400':
+            description: Solicitud inválida
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+          '404':
+            description: Pago no encontrado
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+
+    /biblioteca/libros/{nombreUsuario}:
+      get:
+        tags:
+          - Compras
+        summary: Retorna la biblioteca de libros (libros+consumos) del usuario basado en sus compras
+        parameters:
+          - name: nombreUsuario
+            in: path
+            required: true
+            description: Nombre del usuario al que se le asignará la compra.
+            schema:
+              type: string
+        responses:
+          '200':
+            description: Biblioteca de libros del usuario
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/BibliotecaLibros'
+    /biblioteca/peliculas/{nombreUsuario}:
+      get:
+        tags:
+          - Compras
+        summary: Retorna la biblioteca de peliculas (peliculas+consumos) del usuario basado en sus compras
+        parameters:
+          - name: nombreUsuario
+            in: path
+            required: true
+            description: Nombre del usuario al que se le asignará la compra.
+            schema:
+              type: string
+        responses:
+          '200':
+            description: Biblioteca de peliculas del usuario
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/BibliotecaPeliculas'
+    
+  
+    #  ===============================  Contenidos  ===============================
+    /contenido:
+      post:
+        tags: 
+          - Contenidos
+        summary: Crear nuevo contenido (película o libro)
+        operationId: crearContenido
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contenido'
+              example:
+                titulo: "Inception"
+                tipoContenido: pelicula
+                descripcion: "A thief who steals corporate secrets through the use of dream-sharing technology."
+                portada: "http://example.com/inception.jpg"
+                precio: 9.99
+                fechaEstreno: "2010-07-16"
+                fechaPublicacion: "2010-07-16"
+                fechaLimite: "2025-07-16"
+                archivo: "http://example.com/inception.mp4"
+                categoria:
+                  - tipo: "Ciencia Ficción"
+                keywords:
+                  - nombre: "sueños"
+                  - nombre: "tecnología"
+                tipoParticipante:
+                  - tipo: "Actor"
+                participantes:
+                  - nombre: "Leonardo DiCaprio"
+                    apellido: "DiCaprio"
+                    biografia: "American actor and producer."
+                    fechaNacimiento: "1974-11-11"
+                licencia:
+                  dominio: "http://example.com/license"
+                  tipo: "Standard"
+                  fechaInicio: "2010-07-16"
+                  fechaFin: "2025-07-16"
+                adminCreador:
+                  nombreUsuario: "adminactualizado"
+                  email: "nuevo.admin@compr.ar"
+                  rol: "admin"
+                duracion: "2h 28m"
+        responses:
+          '201':
+            description: Contenido creado exitosamente
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Contenido'
+          '400':
+            description: Creacion no realizada
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+      get:
+        tags:
+          - Contenidos
+        summary: Obtiene todas los contenidos con filtros opcionales
+        parameters:
+          - name: estado
+            in: query
+            required: false
+            description: El estado de los contenidos a obtener
+            schema:
+              $ref: '#/components/schemas/EstadoContenido/properties/estado'
+          - name: categoria
+            in: query
+            required: false
+            description: La categoria de los contenidos a obtener
+            schema:
+              type: string
+          - name: keyword
+            in: query
+            required: false
+            description: La keyword de los contenidos a obtener
+            schema:
+              type: string
+          - name: fechaEstreno
+            in: query
+            required: false
+            description: La fecha de estreno de los contenidos a obtener
+            schema:
+              type: string
+              format: date
+          - name: fechaPublicacion
+            in: query
+            required: false
+            description: La fecha de publicacion de los contenidos a obtener
+            schema:
+              type: string
+              format: date
+          - name: precioMinimo
+            in: query
+            required: false
+            description: El precio minimo de los contenidos a obtener
+            schema:
+              type: number
+              format: float
+          - name: precioMaximo
+            in: query
+            required: false
+            description: El precio maximo de los contenidos a obtener
+            schema:
+              type: number
+              format: float
+          - name: precio
+            in: query
+            required: false
+            description: El precio de los contenidos a obtener
+            schema:
+              type: number
+              format: float 
+          - name: director
+            in: query
+            required: false
+            description: El nombre del director de los contenidos a obtener
+            schema:
+              type: string
+          - name: actor
+            in: query
+            required: false
+            description: El nombre del actor de los contenidos a obtener
+            schema:
+              type: string
+          - name: autor
+            in: query
+            required: false
+            description: El nombre del autor de los contenidos a obtener
+            schema:
+              type: string
+          - name: isbn
+            in: query
+            required: false
+            description: El isbn de los contenidos a obtener
+            schema:
+              type: integer
+          - name: titulo
+            in: query
+            required: false
+            description: El titulo del contenido a obtener
+            schema:
+              type: string
+          - name: cantidadPaginas
+            in: query
+            required: false
+            description: La cantidad de páiginas del libro a obtener
+            schema:
+              type: string
+
+        responses:
+          '200':
+            description: success
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Contenido'
+          '404':
+            description: Contenido no encontrado
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+
+    /contenido/{id}:
+      get:
+        tags:
+          - Contenidos
+        summary: Obtiene un contenido por su ID
+        parameters:
+          - name: id
+            in: path
+            required: true
+            description: El ID del contenido a obtener
+            schema:
+              type: string
+        responses:
+          '200':
+            description: success
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Contenido'
+          '404':
+            description: Contenido no encontrado
+            content:
+                application/json:
+                  schema:
+                    $ref: '#/components/schemas/Error'
+      put:
+        tags:
+          - Contenidos
+        summary: Actualizar contenido por ID
+        operationId: actualizarContenido
+        parameters:
+          - name: id
+            in: path
+            required: true
+            schema:
+              type: string
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contenido'
+              example:
+                titulo: "Inception"
+                tipoContenido: "pelicula"
+                descripcion: "A thief who steals corporate secrets through the use of dream-sharing technology."
+                portada: "http://example.com/inception.jpg"
+                precio: 9.99
+                fechaEstreno: "2010-07-16"
+                fechaPublicacion: "2010-07-16"
+                fechaLimite: "2025-07-16"
+                archivo: "http://example.com/inception.mp4"
+                categoria:
+                  - tipo: "Ciencia Ficción"
+                keywords:
+                  - nombre: "sueños"
+                  - nombre: "tecnología"
+                tipoParticipante:
+                  - tipo: "Actor"
+                participantes:
+                  - nombre: "Leonardo DiCaprio"
+                    apellido: "DiCaprio"
+                    biografia: "American actor and producer."
+                    fechaNacimiento: "1974-11-11"
+                licencia:
+                  dominio: "http://example.com/license"
+                  tipo: "Standard"
+                  fechaInicio: "2010-07-16"
+                  fechaFin: "2025-07-16"
+                duracion: "2h 28m"
+        responses:
+          '200':
+            description: Contenido actualizado exitosamente
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Contenido'
+          '400':
+            description: Error en los datos enviados
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+          '404':
+            description: Contenido no encontrado
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+
+    /contenido/{id}/estado:
+      put:
+        tags:
+          - Contenidos
+        summary: Modifica el estado de un contenido
+        parameters:
+          - name: id
+            in: path
+            required: true
+            description: El ID del contenido a modificar
+            schema:
+              type: string
+          - name: estado
+            in: query  
+            required: true
+            schema:
+              $ref: '#/components/schemas/EstadoContenido/properties/estado'
+        responses:
+          '200':
+            description: Estado actualizado correctamente
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Contenido'
+          '404':
+            description: Contenido no encontrado
+
+    /contenido/{id}/revision:
+      post:
+        tags:
+          - Contenidos
+        summary: Revisar contenido
+        description: Registra la revisión del contenido, incluyendo si fue aprobado y comentarios.
+        parameters:
+          - name: id
+            in: path
+            required: true
+            schema:
+              type: string
+            description: ID del contenido a revisar
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevisionContenido'
+        responses:
+          '200':
+            description: Contenido revisado exitosamente
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Contenido'
+                example:
+                  titulo: "Inception"
+                  tipoContenido: "pelicula"
+                  descripcion: "A thief who steals corporate secrets through the use of dream-sharing technology."
+                  portada: "http://example.com/inception.jpg"
+                  precio: 9.99
+                  fechaEstreno: "2010-07-16"
+                  fechaPublicacion: "2010-07-16"
+                  fechaLimite: "2025-07-16"
+                  archivo: "http://example.com/inception.mp4"
+                  estado: "PUBLICADA"
+                  categoria:
+                    - tipo: "Ciencia Ficción"
+                  keywords:
+                    - nombre: "sueños"
+                    - nombre: "tecnología"
+                  tipoParticipante:
+                    - tipo: "Actor"
+                  participantes:
+                    - nombre: "Leonardo DiCaprio"
+                      apellido: "DiCaprio"
+                      biografia: "American actor and producer."
+                      fechaNacimiento: "1974-11-11"
+                  licencia:
+                    dominio: "http://example.com/license"
+                    tipo: "Standard"
+                    fechaInicio: "2010-07-16"
+                    fechaFin: "2025-07-16"
+                  revisiones:
+                    fecha: "2025-05-25"
+                    comentario: "string"
+                    estaAprobado: true
+                    adminCreador:
+                      nombreUsuario: "adminactualizado"
+                      email: "nuevo.admin@compr.ar"
+                      rol: "revisor"
+                  adminCreador:
+                    nombreUsuario: "adminactualizado"
+                    email: "nuevo.admin@compr.ar"
+                    rol: "admin"
+                  duracion: "2h 28m"
+                
+          '404':
+            description: Contenido no encontrado
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+    
+    /contenido/categorias:
+      get:
+        tags:
+          - Contenidos
+        summary: Obtiene todas las categorias
+        responses:
+          '200':
+            description: success
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Categoria'
+
+
+    #  ===============================  Consumos  ===============================
+    /consumos/ultimo/libros:
+      get:
+        tags:
+          - Consumos
+        summary: Obtener el último consumo de cada uno de los libros dados
+        parameters:
+          - in: query
+            name: nombreUsuario
+            schema:
+              type: string
+            required: true
+          - in: query
+            name: contentId
+            schema:
+              type: array
+              items:
+                type: string
+            style: form
+            explode: true
+            required: true
+        responses:
+          '200':
+            description: Último consumo de dichos libros
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ConsumoLibro'
+
+    /consumos/ultimo/peliculas:
+      get:
+        tags:
+          - Consumos
+        summary: Obtener el último consumo de cada uno de las peliculas dadas
+        parameters:
+          - in: query
+            name: nombreUsuario
+            schema:
+              type: string
+            required: true
+          - in: query
+            name: contentId
+            schema:
+              type: array
+              items:
+                type: string
+            style: form
+            explode: true
+            required: true
+        responses:
+          '200':
+            description: Último consumo de dichas peliculas
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ConsumoPelicula'
+    /consumos/libro:
+      post:
+        tags:
+          - Consumos
+        summary: Agregar un nuevo consumo de libro
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/ConsumoLibro'
+        responses:
+          '201':
+            description: Consumo agregado exitosamente
+      get:
+        tags:
+          - Consumos
+        summary: Buscar consumo de libro con filtros
+        operationId: buscarConsumo
+        parameters:
+          - in: query
+            name: nombreUsuario
+            schema:
+              type: string
+          - in: query
+            name: fecha
+            schema:
+              type: string
+              format: date
+          - in: query
+            name: hora
+            schema:
+              type: string
+              format: time
+          - in: query
+            name: contentId
+            schema:
+              type: string
+        responses:
+          '200':
+            description: Consumos filtrados
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ConsumoLibro'
+    /consumos/pelicula:
+      post:
+        tags:
+          - Consumos
+        summary: Agregar un nuevo consumo de pelicula
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/ConsumoPelicula'
+        responses:
+          '201':
+            description: Consumo agregado exitosamente
+      get:
+        tags:
+          - Consumos
+        summary: Buscar consumo de pelicula con filtros
+        parameters:
+          - in: query
+            name: nombreUsuario
+            schema:
+              type: string
+          - in: query
+            name: fecha
+            schema:
+              type: string
+              format: date
+          - in: query
+            name: hora
+            schema:
+              type: string
+              format: time
+          - in: query
+            name: contentId
+            schema:
+              type: string
+        responses:
+          '200':
+            description: Consumos filtrados
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ConsumoPelicula'
+
+    /consumos:
+      get:
+        tags:
+          - Consumos
+        summary: Obtener todos los consumos
+        operationId: getConsumos
+        parameters:
+          - in: query
+            name: nombreUsuario
+            schema:
+              type: string
+        responses:
+          '200':
+            description: Lista de consumos
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Consumo'
+
+    /recomendaciones/{nombreUsuario}:
+      get:
+        tags:
+          - Consumos
+        summary: Generar recomendaciones
+        operationId: generarRecomendaciones
+        parameters:
+          - name: nombreUsuario
+            in: path
+            required: true
+            description: Nombre del usuario al que se le asignará la compra.
+            schema:
+              type: string
+        responses:
+          '200':
+            description: Recomendaciones
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Contenido'
+
+    /cambio:
+      post:
+        tags:
+          - Cambios
+        summary: Registra un cambio
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cambio'
+        responses:
+          '201':
+            description: Cambio registrado exitosamente
+    
+    /cambio/contenidos:
+      get:
+        summary: Obtener cambios en contenidos
+        tags:
+          - Cambios
+        responses:
+          '200':
+            description: Lista de cambios en contenidos
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Cambio'
+
+    /cambio/planes:
+      get:
+        tags:
+        - Cambios
+        summary: Obtener cambios en planes
+        operationId: getCambiosPlanes
+        responses:
+          '200':
+            description: Lista de cambios en planes
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Cambio'
+                  example:
+                    fecha: 2024-07-16
+                    comentario: "Se realizo un cambio en un contenido"
+                    usuarioAdministrador:
+                      nombreUsuario: administrador
+                      email: nuevo.admin@compr.ar
+                      rol: admin
+
+components:
+  schemas:
+    Consumo:
+      type: object
+      properties:
+        fecha:
+          type: string
+          format: date
+        hora:
+          type: string
+          format: time
+        nombreUsuario:
+          type: string
+        cententId:
+          type: string
+
+    ConsumoPelicula:
+      allOf:
+        - $ref: '#/components/schemas/Consumo'
+        - type: object
+          properties:
+            ultimoMinVisto:
+              type: integer
+
+    ConsumoLibro:
+      allOf:
+        - $ref: '#/components/schemas/Consumo'
+        - type: object
+          properties:
+            ultimaPag:
+              type: integer
+    
+    BibliotecaLibros:
+      allOf:
+        - $ref: '#/components/schemas/Contenido'
+        - type: object
+          properties:
+            lastConsumption:
+              $ref: '#/components/schemas/ConsumoLibro'
+    
+    BibliotecaPeliculas:
+      allOf:
+        - $ref: '#/components/schemas/Contenido'
+        - type: object
+          properties:
+            lastConsumption:
+              $ref: '#/components/schemas/ConsumoPelicula'
+
+    Usuario:
+      type: object
+      properties:
+        id:
+          type: string
+        nombreUsuario:
+          type: string
+        email:
+          type: string
+        contrasena:
+          type: string
+        fechaRegistro:
+          type: string
+          description: Fecha en formato ISO 8601
+        actualizacionesDeEstado:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActualizacionEstado'
+
+    UsuarioCliente:
+      allOf:
+        - $ref: '#/components/schemas/Usuario'
+        - type: object
+          properties:
+            telefono:
+              type: string
+            persona: 
+              $ref: '#/components/schemas/Persona'
+
+    UsuarioAdministrador:
+      allOf:
+        - $ref: '#/components/schemas/Usuario'
+        - type: object
+          properties:
+            rol:
+              type: string
+
+    Estado:
+      type: string
+      enum:
+        - activo
+        - inactivo
+        - suspendido
+        - eliminado
+
+    ActualizacionEstado:
+      type: object
+      properties:
+        fecha:
+          type: string
+          format: date-time
+          example: '2025-05-19T12:34:56Z'
+        motivo:
+          type: string
+        estado:
+          $ref: '#/components/schemas/Estado'
+
+    Persona:
+      type: object
+      properties:
+        nombre:
+          type: string
+        apellido:
+          type: string
+        domicilio:
+          type: string
+        tipoDoc:
+          type: string
+        nroDoc:
+          type: number
+        fechaNacimiento:
+          type: string
+          description: isostring
+          
+    Compra:
+      type: object
+      properties:
+        nroCompra:
+          type: integer
+          example: 1001
+        fecha:
+          type: string
+          format: date
+          example: '2025-05-18'
+        monto:
+          type: number
+          format: float
+          example: 250.75
+        pagos:
+          type: array
+          items:
+            $ref: '#/components/schemas/Pago'
+      required:
+        - nroCompra
+        - fecha
+        - monto
+        - pagos
+      
+    CompraContenido:
+      allOf:
+        - $ref: '#/components/schemas/Compra'
+        - type: object
+          properties:
+            contenido:
+              $ref: '#/components/schemas/Contenido'
+          required:
+            - contenido
+              
+    CompraSuscripcion:
+      allOf:
+        - $ref: '#/components/schemas/Compra'
+        - type: object
+          properties:
+            suscripcion:
+              $ref: '#/components/schemas/Suscripcion'
+          required:
+            - suscripcion
+        
+    Pago:
+      type: object
+      properties:
+        nroComprobante:
+          type: string
+          example: C-2025001
+        fecha:
+          type: string
+          format: date
+        moneda:
+          type: string
+        cantidad:
+          type: number
+          format: float
+        factura:
+          $ref: '#/components/schemas/Factura'
+        actualizacionEstado:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActualizacionEstadoPago'
+      required:
+        - nroComprobante
+        - fecha
+        - moneda
+        - cantidad
+        - actualizacionEstado
+        
+    ActualizacionEstadoPago:
+      type: object
+      properties:
+        fecha:
+          type: string
+          format: date
+        estadoPago:
+           $ref: '#/components/schemas/EstadoPago'
+      required:
+        - fecha
+        - estadoPago
+        
+    EstadoPago:
+      type: object
+      properties:
+        tipoEstado:
+          type: string
+      required:
+        - tipoEstado
+    
+    Factura:
+      type: object
+      properties:
+        nroFactura:
+          type: string
+        porcentImpuest:
+          type: number
+          format: float
+        tipo:
+          type: string
+      required:
+        - nroFactura
+        - porcentImpuest
+        - tipo
+
+    # ============================ Contneidos ============================
+    ContenidoBase:
+      type: object
+      properties:
+        idContenido:
+          type: string
+        tipoContenido:
+          type: string
+          enum: [pelicula, libro]
+        titulo:
+          type: string
+        descripcion:
+          type: string
+        portada:
+          type: string
+          format: uri
+        precio:
+          type: number
+          format: float
+        fechaEstreno:
+          type: string
+          format: date
+        fechaPublicacion:
+          type: string
+          format: date
+        fechaLimite:
+          type: string
+          format: date
+        archivo:
+          type: string
+          format: uri
+        estado:
+          $ref: '#/components/schemas/EstadoContenido'
+        categoria:
+          type: array
+          items:
+            $ref: '#/components/schemas/Categoria'
+        keywords:
+          type: array
+          items:
+            $ref: '#/components/schemas/Keyword'
+        tipoParticipante:
+          type: array
+          items:
+           $ref: '#/components/schemas/TipoParticipante'
+        licencia:
+          $ref: '#/components/schemas/Licencia'
+        revisiones:
+          type: array
+          items:
+            $ref: '#/components/schemas/RevisionContenido'
+        adminCreador:
+            $ref: '#/components/schemas/UsuarioAdministrador'
+        cambios:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cambio'
+      required:
+        - idContenido
+        - titulo
+        - precio
+        - estado
+        - categoria
+        - licencia
+        - adminCreador
+        - tipoContenido
+    Pelicula:
+      allOf:
+        - $ref: '#/components/schemas/ContenidoBase'
+        - type: object
+          properties:
+            duracion:
+              type: string
+              format: time
+          example:
+            idContenido: "12345"
+            titulo: "Inception"
+            tipoContenido: pelicula
+            descripcion: "A thief who steals corporate secrets through the use of dream-sharing technology."
+            portada: "http://example.com/inception.jpg"
+            precio: 9.99
+            fechaEstreno: "2010-07-16"
+            fechaPublicacion: "2010-07-16"
+            fechaLimite: "2025-07-16"
+            archivo: "http://example.com/inception.mp4"
+            estado: "EN REVISION"
+            categoria:
+              - tipo: "Ciencia Ficción"
+            keywords:
+              - nombre: "sueños"
+              - nombre: "tecnología"
+            tipoParticipante:
+              - tipo: "Actor"
+            participantes:
+              - nombre: "Leonardo DiCaprio"
+                apellido: "DiCaprio"
+                biografia: "American actor and producer."
+                fechaNacimiento: "1974-11-11"
+            licencia:
+              dominio: "http://example.com/license"
+              tipo: "Standard"
+              fechaInicio: "2010-07-16"
+              fechaFin: "2025-07-16"
+            revisiones:
+            adminCreador:
+              nombreUsuario: "adminactualizado"
+              email: "nuevo.admin@compr.ar"
+              rol: "admin"
+            cambios:
+            duracion: "2h 28m"
+    Libro:
+      allOf:
+        - $ref: '#/components/schemas/ContenidoBase'
+        - type: object
+          properties:
+            nroPaginas:
+              type: integer
+            isbn:
+              type: string
+          required:
+            - isbn
+          example:
+            idContenido: "22222"
+            titulo: "El Principito"
+            tipoContenido: libro
+            descripcion: "Un libro sobre un joven príncipe que viaja por el universo."
+            portada: "http://example.com/el_principito.jpg"
+            precio: 12.99
+            fechaEstreno: "1943-04-06"
+            fechaPublicacion: "1943-04-06"
+            fechaLimite: "2025-04-06"
+            archivo: "http://example.com/el_principito.pdf"
+            estado:
+              estado: "EN REVISION"
+            categoria:
+              - tipo: "Ficción"
+            keywords:
+              - nombre: "aventura"
+              - nombre: "niñez"
+            tipoParticipante:
+              - tipo: "Autor"
+                participantes:
+                  - nombre: "Antoine de Saint-Exupéry"
+                    apellido: "Saint-Exupéry"
+                    biografia: "French writer and aviator."
+                    fechaNacimiento: "1900-06-29"
+            licencia:
+              dominio: "http://example.com/license_libro"
+              tipo: "Standard"
+              fechaInicio: "1943-04-06"
+              fechaFin: "2025-04-06"
+            revisiones:
+            adminCreador:
+              nombreUsuario: "adminactualizado"
+              email: "nuevo.admin@compr.ar"
+              rol: "admin"
+            cambios:
+            nroPaginas: 96
+            isbn: "978-3-16-148410-0"
+    Contenido:
+      oneOf:
+        - $ref: '#/components/schemas/Pelicula'
+        - $ref: '#/components/schemas/Libro'
+      discriminator:
+        propertyName: tipoContenido
+        mapping:
+          pelicula: '#/components/schemas/Pelicula'
+          libro: '#/components/schemas/Libro'
+    EstadoContenido:
+      type: object
+      properties:
+        estado:
+          type: string
+          enum:
+            - PUBLICADO
+            - OCULTO
+            - EN REVISION
+      required:
+        - estado
+    Categoria:
+      type: object
+      properties:
+        tipo:
+          type: string
+      required:
+        - tipo
+    Keyword:
+      type: object
+      properties:
+        nombre:
+          type: string
+      required:
+        - nombre
+    TipoParticipante:
+      type: object
+      properties:
+        tipo:
+          type: string
+        participantes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Participante'
+      required:
+        - tipo
+    Participante:
+      type: object
+      properties:
+        nombre:
+          type: string
+        apellido:
+          type: string
+        biografia:
+          type: string
+        fechaNacimiento:
+          type: string
+          format: date
+      required:
+        - nombre
+        - apellido
+    Licencia:
+      type: object
+      properties:
+        dominio:
+          type: string
+        tipo:
+          type: string
+        fechaInicio:
+          type: string
+          format: date
+        fechaFin:
+          type: string
+          format: date
+      required:
+        - dominio
+        - tipo
+        - fechaInicio
+        - fechaFin
+    RevisionContenido:
+      type: object
+      properties:
+        fecha:
+          type: string
+          format: date
+        comentario:
+          type: string
+        estaAprobado:
+          type: boolean
+        adminRevisor:
+          $ref: '#/components/schemas/UsuarioAdministrador'
+      required:
+        - fecha
+        - comentario
+        - estaAprobado  
+      example:
+        fecha: "2025-05-25"
+        comentario: "string"
+        estaAprobado: true
+        adminCreador:
+          nombreUsuario: "adminactualizado"
+          email: "nuevo.admin@compr.ar"
+          rol: "revisor"
+
+    ApiResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        type:
+          type: string
+        message:
+          type: string
+      xml:
+        name: '##default'
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+      required:
+        - code
+        - message
+
+    Suscripcion:
+      type: object
+      properties:
+        planSuscripcion:
+          $ref: '#/components/schemas/PlanSuscripcion'
+        estadoSuscripcion:
+          $ref: '#/components/schemas/EstadoSuscripcion'
+        usuarioCliente:
+          $ref: '#/components/schemas/UsuarioCliente'
+        fechaInicio:
+          type: string
+          format: date
+        fechaFin:
+          type: string
+          format: date
+      required:
+        - fechaInicio
+        - fechaFin
+        - planSuscripcion
+        - estadoSuscripcion
+    PlanSuscripcion:
+      type: object
+      properties:
+        nombre:
+          type: string
+        fechaInicio:
+          type: string
+          format: date
+        fechaFin:
+          type: string
+          format: date
+        precioActual:
+          type: number
+        adminCreador:
+          $ref: '#/components/schemas/UsuarioAdministrador'
+        cambios:
+          type: array
+          items:
+            type: object
+            $ref: '#/components/schemas/Cambio'
+        revision:
+          $ref: '#/components/schemas/Revision'
+        estadoPlanSuscripcion:
+          $ref: '#/components/schemas/EstadoPlanSuscripcion'
+        descPorAgrupacion:
+          type: array
+          items:
+            type: object
+            $ref: '#/components/schemas/DescPorAgrupacion'
+        descIndividual:
+          type: array
+          items:
+            type: object
+          $ref: '#/components/schemas/DescIndividual'
+      required:
+        - nombre
+        - fechaInicio
+        - precioActual
+        - estadoPlanSuscripcion
+    EstadoSuscripcion:
+      type: object
+      properties:
+        estado:
+          type: string
+          enum:
+            - activa
+            - cancelada
+            - finalizada
+      required:
+        - estado
+    EstadoPlanSuscripcion:
+      type: object
+      properties:
+        estado:
+          type: string
+          enum:
+            - inactiva
+            - publicada
+            - revision
+            - rechazada
+      required:
+        - estado
+    DescPorAgrupacion:
+      type: object
+      properties:
+        porcentaje:
+          type: number
+        agrupacion:
+          type: array
+          items:
+            type: object
+            $ref: '#/components/schemas/Categoria'
+      required:
+        - porcentaje
+        - agrupacion
+    DescIndividual:
+      type: object
+      properties:
+        porcentaje:
+          type: number
+        contenidos:
+          type: array
+          items:
+            type: object
+            $ref: '#/components/schemas/Contenido'
+      required:
+        - porcentaje
+        - contenidos
+    Revision:
+      type: object
+      properties:
+        fecha:
+          type: string
+          format: date
+        comentario:
+          type: string
+        estaAprobado:
+          type: boolean
+        usuarioAdministrador:
+          $ref: '#/components/schemas/UsuarioAdministrador'
+      required:
+        - fecha
+        - comentario
+        - estaAprobado
+    Cambio:
+      type: object
+      properties:
+        fecha:
+          type: string
+          format: date
+        comentario:
+          type: string
+      required:
+        - fecha
+        - comentario
+    StartSessionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Session initiated successfully
+      xml:
+        name: StartSessionResponse
+    StatusSessionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        state:
+          type: string
+          example: CONNECTED
+        message:
+          type: string
+          example: session_connected
+      xml:
+        name: StatusSessionResponse
+    RestartSessionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Restarted successfully
+      xml:
+        name: RestartSessionResponse
+    TerminateSessionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Logged out successfully
+      xml:
+        name: TerminateSessionResponse
+    TerminateSessionsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Flush completed successfully
+      xml:
+        name: TerminateSessionsResponse
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: Some server error
+      xml:
+        name: ErrorResponse
+    NotFoundResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: Some server error
+      xml:
+        name: NotFoundResponse
+    ForbiddenResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: Invalid API key
+      xml:
+        name: ForbiddenResponse
+    StringList:
+      type: array
+      items:
+        type: string
+  securitySchemes:
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
