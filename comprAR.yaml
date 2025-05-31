@@ -1028,7 +1028,7 @@ paths:
                   schema:
                     type: array
                     items:
-                      - $ref: '#/components/schemas/CompraContenido'
+                      $ref: '#/components/schemas/CompraContenido'
             default:
               description: Unexpected error
               content:
@@ -1407,13 +1407,20 @@ paths:
                     $ref: '#/components/schemas/BibliotecaPeliculas'
     
   
-    #  ===============================  Contenidos  ===============================
+  #  ===============================  Contenidos  ===============================    
     /contenido:
       post:
         tags: 
           - Contenidos
         summary: Crear nuevo contenido (película o libro)
         operationId: crearContenido
+        parameters:
+          - name: token
+            in: header
+            required: true
+            description: Token para validar la operación
+            schema:
+              type: string
         requestBody:
           required: true
           content:
@@ -1460,11 +1467,17 @@ paths:
                 schema:
                   $ref: '#/components/schemas/Contenido'
           '400':
-            description: Creacion no realizada
+            description: Creación no realizada
             content:
               application/json:
                 schema:
                   $ref: '#/components/schemas/ErrorResponse'
+          '422':
+            description: Error de validación
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
       get:
         tags:
           - Contenidos
@@ -1607,6 +1620,12 @@ paths:
         summary: Actualizar contenido por ID
         operationId: actualizarContenido
         parameters:
+          - name: token
+            in: header
+            required: true
+            description: Token para validar la operación
+            schema:
+              type: string
           - name: id
             in: path
             required: true
@@ -1665,6 +1684,12 @@ paths:
               application/json:
                 schema:
                   $ref: '#/components/schemas/Error'
+          '422':
+            description: Error de validación
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
 
     /contenido/{id}/estado:
       put:
@@ -1672,6 +1697,12 @@ paths:
           - Contenidos
         summary: Modifica el estado de un contenido
         parameters:
+          - name: token
+            in: header
+            required: true
+            description: Token para validar la operación
+            schema:
+              type: string
           - name: id
             in: path
             required: true
@@ -1692,6 +1723,12 @@ paths:
                   $ref: '#/components/schemas/Contenido'
           '404':
             description: Contenido no encontrado
+          '422':
+            description: Error de validación
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
 
     /contenido/{id}/revision:
       post:
@@ -1700,6 +1737,12 @@ paths:
         summary: Revisar contenido
         description: Registra la revisión del contenido, incluyendo si fue aprobado y comentarios.
         parameters:
+          - name: token
+            in: header
+            required: true
+            description: Token para validar la operación
+            schema:
+              type: string
           - name: id
             in: path
             required: true
@@ -1767,6 +1810,12 @@ paths:
               application/json:
                 schema:
                   $ref: '#/components/schemas/Error'
+          '422':
+            description: Error de validación
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
     
     /contenido/categorias:
       get:
@@ -1782,8 +1831,10 @@ paths:
                   type: array
                   items:
                     $ref: '#/components/schemas/Categoria'
+  
 
-
+  
+    
     #  ===============================  Consumos  ===============================
     /consumos/ultimo/libros:
       get:
