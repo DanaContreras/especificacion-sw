@@ -55,29 +55,152 @@ paths:
                     token:
                       type: string
                       example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                    expiresIn:
+                      type: integer
+                      description: Tiempo de expiración del token en segundos
+                      example: 43200
           '401':
             description: Credenciales inválidas
-          '500':
-            description: Error interno del servidor
-    
+
+    /auth/actualizar-token:
+      post:
+        tags:
+          - Usuarios
+        security:
+          - bearerAuth: []
+        summary: Renovar token de acceso
+        description: Genera un nuevo token de acceso usando un refresh token válido.
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - refreshToken
+                properties:
+                  refreshToken:
+                    type: string
+                    example: "xyz789refreshTokenExample"
+        responses:
+          '200':
+            description: Token de acceso renovado exitosamente
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    token:
+                      type: string
+                      example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                    expiresIn:
+                      type: integer
+                      description: Tiempo de expiración del nuevo token en segundos
+                      example: 43200
+          '400':
+            description: Refresh token inválido o expirado
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+
     /auth/logout:
       post:
         tags:
           - Usuarios
         summary: Cerrar sesión del usuario
+        security:
+          - bearerAuth: []
         responses:
-          '200': 
+          '200':
             description: Sesión cerrada exitosamente
           '401':
             description: No autorizado
-          '500':
-            description: Error interno del servidor
-    
+
+    /auth/olvide-contrasena:
+      post:
+        tags:
+          - Usuarios
+        security:
+          - bearerAuth: []
+        summary: Solicitar restablecimiento de contraseña
+        description: Envía un enlace o token de restablecimiento al correo del usuario.
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - email
+                properties:
+                  email:
+                    type: string
+                    format: email
+                    example: "juan@ejemplo.com"
+        responses:
+          '200':
+            description: Solicitud de restablecimiento enviada correctamente
+          '400':
+            description: Correo inválido
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+          '404':
+            description: Usuario no encontrado
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+
+    /auth/resetear-contrasena:
+      post:
+        tags:
+          - Usuarios
+        summary: Restablecer contraseña
+        description: Restablece la contraseña del usuario usando un token enviado por correo.
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - resetToken
+                  - nuevaContrasena
+                properties:
+                  resetToken:
+                    type: string
+                    example: "xyz123abc"
+                  nuevaContrasena:
+                    type: string
+                    format: password
+                    minLength: 8
+                    example: "nuevaSecreta123"
+        responses:
+          '200':
+            description: Contraseña restablecida correctamente
+          '400':
+            description: Token inválido o expirado
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+          '404':
+            description: Usuario no encontrado
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+
     /admin:
       post:
         tags:
           - Usuarios
         summary: Crear un nuevo usuario administrador
+        security:
+          - bearerAuth: []
         requestBody:
           required: true
           content:
@@ -108,14 +231,14 @@ paths:
               application/json:
                 schema:
                   $ref: '#/components/schemas/ErrorResponse'
-          '500':
-            description: Error interno del servidor
-    
+
     /admin/{id}:
       put:
         tags:
           - Usuarios
         summary: Modificar usuario administrador existente
+        security:
+          - bearerAuth: []
         parameters:
           - name: id
             in: path
@@ -152,12 +275,13 @@ paths:
               application/json:
                 schema:
                   $ref: '#/components/schemas/NotFoundResponse'
-          '500':
-            description: Error interno del servidor
+
       get:
         tags:
           - Usuarios
         summary: Obtener información del usuario administrador
+        security:
+          - bearerAuth: []
         parameters:
           - name: id
             in: path
@@ -174,9 +298,7 @@ paths:
                   $ref: '#/components/schemas/UsuarioAdministrador'
           '404':
             description: Usuario no encontrado
-          '500':
-            description: Error interno del servidor
-            
+
     /cliente:
       post:
         tags:
@@ -223,14 +345,14 @@ paths:
             description: Error en los datos enviados
           '409':
             description: Usuario ya existe
-          '500':
-            description: Error interno del servidor
-    
+
     /cliente/{id}:
       put:
         tags:
           - Usuarios
         summary: Modificar usuario cliente
+        security:
+          - bearerAuth: []
         parameters:
           - name: id
             in: path
@@ -261,35 +383,19 @@ paths:
             content:
               application/json:
                 schema:
-                  type: object
-                  properties:
-                    error:
-                      type: string
-                    message:
-                      type: string
-                  example:
-                    error: "bad-request"
-                    message: "Invalid JSON format or missing required fields"
+                  $ref: '#/components/schemas/ErrorResponse'
           '404':
             description: Usuario no encontrado
             content:
               application/json:
                 schema:
-                  type: object
-                  properties:
-                    error:
-                      type: string
-                    message:
-                      type: string
-                  example:
-                    error: "not-found"
-                    message: "User with the specified ID does not exist"
-          '500':
-            description: Error interno del servidor
+                  $ref: '#/components/schemas/NotFoundResponse'
       get:
         tags:
           - Usuarios
         summary: Obtener información del usuario cliente
+        security:
+          - bearerAuth: []
         parameters:
           - name: id
             in: path
@@ -306,34 +412,14 @@ paths:
                   $ref: '#/components/schemas/UsuarioCliente'
           '404':
             description: Usuario no encontrado
-          '500':
-            description: Error interno del servidor
-    
-    /usuario/suspender/{id}:
-      put:
-        tags:
-          - Usuarios
-        summary: Suspender un usuario
-        parameters:
-          - name: id
-            in: path
-            required: true
-            description: El ID del usuario
-            schema:
-              type: string
-        responses:
-          '200':
-            description: Usuario suspendido correctamente
-          '404':
-            description: Usuario no encontrado
-          '500':
-            description: Error interno del servidor
-    
+
     /usuario/{id}:
       get:
         tags:
           - Usuarios
         summary: Obtener información general del usuario
+        security:
+          - bearerAuth: []
         parameters:
           - name: id
             in: path
@@ -350,19 +436,43 @@ paths:
                   $ref: '#/components/schemas/Usuario'
           '404':
             description: Usuario no encontrado
-          '500':
-            description: Error interno del servidor
-    
-    /persona/{nombreUsuario}:
+
+      delete:
+        tags:
+          - Usuarios
+        summary: Eliminar un usuario
+        description: Elimina un usuario del sistema de forma permanente.
+        security:
+          - bearerAuth: []
+        parameters:
+          - name: id
+            in: path
+            required: true
+            description: El ID del usuario
+            schema:
+              type: string
+        responses:
+          '204':
+            description: Usuario eliminado correctamente
+          '404':
+            description: Usuario no encontrado
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+
+    /persona/{id}:
       get:
         tags:
           - Usuarios
         summary: Obtener información de la persona asociada al usuario
+        security:
+          - bearerAuth: []
         parameters:
-          - name: nombreUsuario
+          - name: id
             in: path
             required: true
-            description: El ID del usuario
+            description: El id del usuario de dicha persona
             schema:
               type: string
         responses:
@@ -374,38 +484,76 @@ paths:
                   $ref: '#/components/schemas/Persona'
           '404':
             description: Persona no encontrada
-          '500':
-            description: Error interno del servidor
-    
+
     /usuarios:
       get:
         tags:
           - Usuarios
-        summary: Obtener todos los usuarios
+        summary: Obtener lista de usuarios con paginación y filtros
+        description: Devuelve una lista de usuarios con soporte para paginación y filtrado por rol y estado.
+        security:
+          - bearerAuth: []
+        parameters:
+          - in: query
+            name: page
+            schema:
+              type: integer
+              default: 1
+            description: Número de página
+          - in: query
+            name: limit
+            schema:
+              type: integer
+              default: 10
+            description: Cantidad de usuarios por página
+          - in: query
+            name: rol
+            schema:
+              type: string
+              enum: ["superadmin", "editor", "cliente"]
+            description: Filtrar por rol del usuario
+          - in: query
+            name: estado
+            schema:
+              type: string
+              enum: ["activo", "suspendido", "inactivo"]
+            description: Filtrar por estado del usuario
         responses:
           '200':
-            description: Lista de todos los usuarios
+            description: Lista de usuarios
             content:
               application/json:
                 schema:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/Usuario'
-          '500':
-            description: Error interno del servidor
-    
+                  type: object
+                  properties:
+                    usuarios:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Usuario'
+                    total:
+                      type: integer
+                      example: 100
+                    page:
+                      type: integer
+                      example: 1
+                    limit:
+                      type: integer
+                      example: 10
+
     /estado/{id}:
       post:
         tags:
           - Usuarios
         summary: Agregar una actualización de estado al usuario
+        security:
+          - bearerAuth: []
         parameters:
           - name: id
             in: path
             required: true
             schema:
               type: string
-            description: ID del usuario
+            description: Id del usuario
         requestBody:
           required: true
           content:
@@ -423,11 +571,47 @@ paths:
             description: Solicitud inválida
           '404':
             description: Usuario no encontrado
-          '500':
-            description: Error interno del servidor
 
+    /usuario/confirmar-email:
+      post:
+        tags:
+          - Usuarios
+        summary: Confirmar correo electrónico
+        description: Verifica el token enviado por correo para confirmar el email del usuario.
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - emailToken
+                properties:
+                  emailToken:
+                    type: string
+                    example: "abc123xyz"
+        responses:
+          '200':
+            description: Correo confirmado correctamente
+          '400':
+            description: Token inválido o expirado
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+          '409':
+            description: Correo ya confirmado
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+          '404':
+            description: Usuario no encontrado
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
 
-  
     #  ===============================  Suscripciones  ===============================
     /suscripcion:
       post:
@@ -2836,3 +3020,7 @@ components:
       type: apiKey
       in: header
       name: x-api-key
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
