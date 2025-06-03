@@ -1069,6 +1069,8 @@ paths:
         summary: Obtener compra por su id nroCompra.
         description: Retorna la compra cuyo id es nroCompra.
         operationId: getCompra
+        security:
+          - bearerAuth: []
         parameters:
           - name: nroCompra
             in: path
@@ -1096,6 +1098,10 @@ paths:
                       suscripcion: '#/components/schemas/CompraSuscripcion'
           '400':
             description: Solicitud malformada
+          '401':
+            description: No autenticado. Token ausente o inválido.
+          '403':
+            description: Acceso denegado. El usuario no tiene permiso para acceder a esta compra.
           '404':
             description: Compra no encontrada
           default:
@@ -1109,6 +1115,8 @@ paths:
         tags:
           - Compras
         summary: Obtener compras con filtros opcionales
+        security:
+          - bearerAuth: []
         parameters:
           - name: nombreUsuario
             in: query
@@ -1159,6 +1167,13 @@ paths:
                     mapping:
                       contenido: '#/components/schemas/CompraContenido'
                       suscripcion: '#/components/schemas/CompraSuscripcion'
+                      
+          '400':
+            description: Solicitud malformada
+          '401':
+            description: No autenticado. Token ausente o inválido.
+          '403':
+            description: Acceso denegado. El usuario no tiene permiso para acceder a esta compra.
           default:
             description: Unexpected error
             content:
@@ -1171,6 +1186,8 @@ paths:
           tags:
             - Compras
           summary: Obtener compras de contenido con filtros opcionales
+          security:
+          - bearerAuth: []
           parameters:
             - name: nombreUsuario
               in: query
@@ -1213,6 +1230,12 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/CompraContenido'
+            '400':
+              description: Solicitud malformada
+            '401':
+              description: No autenticado. Token ausente o inválido.
+            '403':
+              description: Acceso denegado. El usuario no tiene permiso para acceder a esta compra.
             default:
               description: Unexpected error
               content:
@@ -1226,6 +1249,8 @@ paths:
         summary: Registra una compra de contenido para un usuario
         description: Crea una nueva compra de contenido asociada a un usuario.
         operationId: crearCompraContenido
+        security:
+          - bearerAuth: []
         parameters:
           - name: token
             in: header
@@ -1256,6 +1281,10 @@ paths:
               application/json:
                 schema:
                   $ref: '#/components/schemas/CompraContenido'
+          '401':
+            description: No autenticado. Token ausente o inválido.
+          '403':
+            description: Acceso denegado. El usuario no tiene permiso para agregar una compra.
           '404':
             description: Usuario no encontrado
             content:
@@ -1274,6 +1303,8 @@ paths:
         tags:
           - Compras
         summary: Obtener compras de suscripciones con filtros opcionales
+        security:
+          - bearerAuth: []
         parameters:
           - name: nombreUsuario
             in: query
@@ -1311,6 +1342,10 @@ paths:
                   type: array
                   items:
                     $ref: '#/components/schemas/CompraSuscripcion'
+          '401':
+              description: No autenticado. Token ausente o inválido.
+          '403':
+            description: Acceso denegado. El usuario no tiene permiso para generar una compra.
           default:
             description: Unexpected error
             content:
@@ -1324,6 +1359,8 @@ paths:
         summary: Registra una compra de suscripción para un usuario
         description: Crea una nueva compra de suscripción asociada a un usuario.
         operationId: crearCompraSuscripcion
+        security:
+          - bearerAuth: []
         parameters:
           - name: token
             in: header
@@ -1364,6 +1401,10 @@ paths:
               application/json:
                 schema:
                   $ref: '#/components/schemas/CompraSuscripcion'
+          '401':
+              description: No autenticado. Token ausente o inválido.
+          '403':
+            description: Acceso denegado. El usuario no tiene permiso de registrar esta compra.
           '404':
             description: Usuario no encontrado
             content:
@@ -1382,6 +1423,8 @@ paths:
         tags:
           - Compras
         summary: Obtener factura por su id nroFactura.
+        security:
+          - bearerAuth: []
         parameters:
           - name: nroFactura
             in: path
@@ -1400,6 +1443,10 @@ paths:
                   $ref: '#/components/schemas/Factura'
           '400':
             description: Solicitud malformada
+          '401':
+              description: No autenticado. Token ausente o inválido.
+          '403':
+            description: Acceso denegado. El usuario no tiene permiso para acceder a esta factura.
           '404':
             description: Factura no encontrada
           default:
@@ -1416,6 +1463,8 @@ paths:
         summary: Obtener pago por medio del numero de comprobante.
         description: Obtener los detalles del pago basado en nroComprobante.
         operationId: getPago
+        security:
+          - bearerAuth: []
         parameters:
           - name: nroComprobante
             in: path
@@ -1434,6 +1483,10 @@ paths:
                   $ref: '#/components/schemas/Pago'
           '400':
             description: Solicitud malformada
+          '401':
+              description: No autenticado. Token ausente o inválido.
+          '403':
+            description: Acceso denegado. El usuario no tiene permiso para acceder a este pago.
           '404':
             description: Pago no encontrado
           default:
@@ -1449,6 +1502,8 @@ paths:
         summary: Obtener pagos con filtros opcionales.
         description: Retorna una lista de pagos, con la posibilidad de aplicar filtros por estado, tipo y fecha.
         operationId: getPagos
+        security:
+          - bearerAuth: []
         parameters:
           - name: estado
             in: query
@@ -1493,6 +1548,10 @@ paths:
               application/json:
                 schema:
                   $ref: '#/components/schemas/Error'
+          '401':
+              description: No autenticado. Token ausente o inválido.
+          '403':
+            description: Acceso denegado. El usuario no tiene permiso para acceder a los pagos.
           default:
             description: Error inesperado
             content:
@@ -1507,6 +1566,8 @@ paths:
         summary: Agrega una nueva actualización de estado al pago identificado por su número de comprobante
         description: Crea una nueva entrada de estado para el pago especificado, registrando el nuevo estado y la fecha actual.
         operationId: agregarActualizacionEstadoPago
+        security:
+          - bearerAuth: []
         parameters:
           - name: nroComprobante
             in: path
@@ -1540,6 +1601,10 @@ paths:
               application/json:
                 schema:
                   $ref: '#/components/schemas/Error'
+          '401':
+              description: No autenticado. Token ausente o inválido.
+          '403':
+            description: Acceso denegado. El usuario no tiene permiso para actualizar un pago.
           '404':
             description: Pago no encontrado
             content:
@@ -1552,6 +1617,8 @@ paths:
         tags:
           - Compras
         summary: Retorna la biblioteca de libros (libros+consumos) del usuario basado en sus compras
+        security:
+          - bearerAuth: []
         parameters:
           - name: nombreUsuario
             in: path
@@ -1568,11 +1635,19 @@ paths:
                   type: array
                   items:
                     $ref: '#/components/schemas/BibliotecaLibros'
+          '401':
+              description: No autenticado. Token ausente o inválido.
+          '403':
+            description: Acceso denegado. El usuario no tiene permiso para acceder a los libros de su biblioteca.
+                    
+                    
     /biblioteca/peliculas/{nombreUsuario}:
       get:
         tags:
           - Compras
         summary: Retorna la biblioteca de peliculas (peliculas+consumos) del usuario basado en sus compras
+        security:
+          - bearerAuth: []
         parameters:
           - name: nombreUsuario
             in: path
@@ -1589,6 +1664,10 @@ paths:
                   type: array
                   items:
                     $ref: '#/components/schemas/BibliotecaPeliculas'
+          '401':
+              description: No autenticado. Token ausente o inválido.
+          '403':
+            description: Acceso denegado. El usuario no tiene permiso para acceder a las peliculas de su biblioteca.
     
   
   #  ===============================  Contenidos  ===============================    
