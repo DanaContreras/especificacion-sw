@@ -617,6 +617,7 @@ paths:
       post:
         tags:
           - Suscripciones
+        summary: Crear una nueva suscripcion
         description: Crea una nueva de suscripcion
         requestBody:
           description: Crea una nueva de suscripcion
@@ -632,8 +633,8 @@ paths:
                 $ref: '#/components/schemas/Suscripcion'
           required: true
         responses:
-          '200':
-            description: ok
+          '201':
+            description: Suscripción creada 
             content:
               application/json:
                 schema:
@@ -644,11 +645,16 @@ paths:
               application/json:
                 schema:
                   $ref: '#/components/schemas/ErrorResponse'
+          '401':
+            description: No autenticado
+          '409':
+            description: Suscripción ya existente
 
       get:
         tags:
           - Suscripciones
-        description: Bruh
+        summary: Obtiene todas las suscripciones dentro de un rango
+        description: Obtiene todas las suscripciones dentro de un rango
         parameters:
           - in: query
             name: fechaInicio
@@ -681,6 +687,10 @@ paths:
               application/json:
                 schema:
                   $ref: '#/components/schemas/ErrorResponse'
+          '401':
+            description: No autenticado
+          '500':
+            description: Error interno del servidor
           '503':
             description: No tiene permisos suficientes
             content:
@@ -691,9 +701,10 @@ paths:
       post:
         tags:
           - Suscripciones
+        summary: Crea una nuevo plan de suscripcion
         description: Crea una nuevo plan de suscripcion
         requestBody:
-          description: Crea una nuevo plan de suscripcion
+          description: Plan de suscripcion
           content:
             application/json:
               schema:
@@ -706,8 +717,8 @@ paths:
                 $ref: '#/components/schemas/PlanSuscripcion'
           required: true
         responses:
-          '200':
-            description: ok
+          '201':
+            description: Plan de suscripción creado exitosamente
             content:
               application/json:
                 schema:
@@ -718,10 +729,13 @@ paths:
               application/json:
                 schema:
                   $ref: '#/components/schemas/ErrorResponse'
+          '409':
+            description: Ya existe un plan con ese nombre
 
       get:
         tags:
           - Suscripciones
+        summary: Obtiene planes de suscripcion por filtrado o todos los planes
         description: Obtiene planes de suscripcion por filtrado o todos los planes
         parameters:
           - in: query
@@ -755,6 +769,10 @@ paths:
               application/json:
                 schema:
                   $ref: '#/components/schemas/ErrorResponse'
+          '401':
+            description: No autenticado
+          '500':
+            description: Error interno del servidor
           '503':
             description: No tiene permisos
             content:
@@ -773,6 +791,7 @@ paths:
             example: "usr_12345"
         tags:
           - Suscripciones
+        summary: Modifica una suscripcion
         description: Modifica una suscripcion
         requestBody:
           description: Modifica una suscripcion
@@ -800,6 +819,57 @@ paths:
               application/json:
                 schema:
                   $ref: '#/components/schemas/ErrorResponse'
+          '401':
+            description: No autenticado
+          '404':
+            description: Suscripción no encontrada
+          '500':
+            description: Error interno del servidor
+          '503':
+            description: No tiene permisos
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ForbiddenResponse'
+        
+      get:
+        tags:
+          - Suscripciones
+        summary: Obtiene la suscripcion actual de un usuario por id
+        parameters:
+          - in: path
+            name: id
+            schema:
+              type: string
+            description: El id del usuario cuya suscripcion se busca
+            required: true
+            example: "usr_12345"
+        description: Obtiene la suscripcion actual de un usuario por id
+        responses:
+          '200':
+            description: OK
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Suscripcion'
+          '204':
+            description: Suscripcion no encontrada
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/NotFoundResponse'
+          '400':
+            description: ID inválido
+          '401':
+            description: No autenticado
+          '404':
+            description: Suscripcion no realizada
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/NotFoundResponse'
+          '500':
+            description: Error interno del servidor
           '503':
             description: No tiene permisos
             content:
@@ -810,6 +880,7 @@ paths:
       put:
         tags:
           - Suscripciones
+        summary: Modifica un plan de suscripcion
         parameters:
           - in: path
             name: nombre
@@ -819,7 +890,7 @@ paths:
             required: true
             example: "silver"
         requestBody:
-          description: Modifica un plan de suscripcion
+          description: Plan de suscripcion
           content:
             application/json:
               schema:
@@ -845,16 +916,23 @@ paths:
               application/json:
                 schema:
                   $ref: '#/components/schemas/ErrorResponse'
+          '401':
+            description: No autenticado
+          '404':
+            description: Plan de suscripción no encontrado
+          '500':
+            description: Error interno del servidor
           '503':
             description: No tiene permisos
             content:
               application/json:
                 schema:
                   $ref: '#/components/schemas/ForbiddenResponse'
-    /planSuscripcion/deshabilitar/{nombre}:
+    /planSuscripcion/{nombre}/deshabilitar:
       put:
         tags:
           - Suscripciones
+        summary: Desabilita un plan de suscripcion con un cierto nombre
         description: Desabilita un plan de suscripcion con un cierto nombre
         parameters:
           - in: path
@@ -873,17 +951,24 @@ paths:
               application/json:
                 schema:
                   $ref: '#/components/schemas/ErrorResponse'
+          '401':
+            description: No autenticado
+          '404':
+            description: Plan de suscripción no encontrado
+          '500':
+            description: Error interno del servidor
           '503':
             description: No tiene permisos
             content:
               application/json:
                 schema:
                   $ref: '#/components/schemas/ForbiddenResponse'
-    /suscripcion/baja/{id}:
+    /suscripcion/{id}/baja:
       put:
         tags:
           - Suscripciones
-        description: Da de baja la suscripcion de un usuario
+        summary: Dar de baja la suscripcion de un usuario
+        description: Dar de baja la suscripcion de un usuario
         parameters:
           - in: path
             name: id
@@ -914,16 +999,23 @@ paths:
               application/json:
                 schema:
                   $ref: '#/components/schemas/ErrorResponse'
+          '401':
+            description: No autenticado
+          '404':
+            description: Suscripción no encontrada
+          '500':
+            description: Error interno del servidor
           '503':
             description: No tiene permisos
             content:
               application/json:
                 schema:
                   $ref: '#/components/schemas/ForbiddenResponse'
-    /planSuscripcion/revision/{nombre}:
+    /planSuscripcion/{nombre}/revision:
       post:
         tags:
           - Suscripciones
+        summary: Carga una revision de un plan de suscripcion
         description: Carga una revision de un plan de suscripcion
         parameters:
           - in: path
@@ -954,16 +1046,23 @@ paths:
               application/json:
                 schema:
                   $ref: '#/components/schemas/ErrorResponse'
+          '401':
+            description: No autenticado
+          '404':
+            description: Plan de suscripción no encontrado
+          '500':
+            description: Error interno del servidor
           '503':
             description: No tiene permisos
             content:
               application/json:
                 schema:
                   $ref: '#/components/schemas/ForbiddenResponse'
-    /planSuscripcion/publicacion/{nombre}:
+    /planSuscripcion/{nombre}/publicacion:
       post:
         tags:
           - Suscripciones
+        summary: Modifica el estado de un plan de suscripcion para publicarlo
         description: Modifica el estado de un plan de suscripcion para publicarlo
         parameters:
           - in: path
@@ -994,38 +1093,12 @@ paths:
               application/json:
                 schema:
                   $ref: '#/components/schemas/ErrorResponse'
-          '503':
-            description: No tiene permisos
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/ForbiddenResponse'
-    /suscripion/{id}:
-      get:
-        tags:
-          - Suscripciones
-        parameters:
-          - in: path
-            name: id
-            schema:
-              type: string
-            description: El id del usuario cuya suscripcion se busca
-            required: true
-            example: "usr_12345"
-        description: Obtiene la suscripcion actual de un usuario por id
-        responses:
-          '200':
-            description: OK
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/Suscripcion'
-          '204':
-            description: Suscripcion no encontrada
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/NotFoundResponse'
+          '401':
+            description: No autenticado
+          '404':
+            description: Plan de suscripción no encontrado
+          '500':
+            description: Error interno del servidor
           '503':
             description: No tiene permisos
             content:
@@ -1037,6 +1110,7 @@ paths:
       get:
         tags:
           - Suscripciones
+        summary: Obtiene los nombres de las suscripciones publicadas
         description: Obtiene los nombres de las suscripciones publicadas
         responses:
           '200':
@@ -1048,11 +1122,21 @@ paths:
                   items:
                     $ref: '#/components/schemas/StringList'
           '204':
-            description: nombres no encontrados
+            description: Nombres no encontrados
             content:
               application/json:
                 schema:
                   $ref: '#/components/schemas/NotFoundResponse'
+          '401':
+            description: No autenticado
+          '404':
+            description: Nombres no encontrados
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/NotFoundResponse'
+          '500':
+            description: Error interno del servidor
           '503':
             description: No tiene permisos
             content:
